@@ -1,0 +1,59 @@
+function [xopt,fopt,niter,gnorm,dx] = stoch_grad_descent(var)
+
+if nargin==0
+    x0 = [3 3]';
+elseif nargin==1
+    x0 = var{1};
+else
+    error('nonono')
+end
+
+tol = 1e-6;
+maxiter = 1000;
+dxmin = 1e-6;
+alpha = 0.1;
+gnorm = inf; x = x0; niter = 0; dx = inf;
+
+f = @(x1,x2) x1.^2 + x1.*x2 + 3*x2.^2;
+figure(1); clf; ezcontour(f,[-5 5 -5 5]); axis equal; hold on
+
+f2 = @(x) f(x(1),x(2));
+h = get(gca, 'xlabel');
+set(h,'FontSize',22);
+h = get(gca, 'ylabel');
+set(h,'FontSize',22);
+h=get(gca,'Title');
+set(h,'FontSize',22);
+set(gca,'FontSize',15);
+
+
+while and(gnorm>=tol, and(niter <= maxiter, dx >= dxmin))
+
+    r = randi([1 2]);
+    g = grad(x,r);
+    gnorm = norm(g);
+
+    xnew = x - alpha*g;
+
+    if ~isfinite(xnew)
+        display(['Number of iterations: ' num2str(niter)])
+        error('x is inf or NaN')
+    end
+
+    plot([x(1) xnew(1)],[x(2) xnew(2)],'ko-')
+    refresh
+
+    niter = niter + 1;
+    dx = norm(xnew-x);
+    x = xnew;
+    
+end
+xopt = x;
+fopt = f2(xopt);
+niter = niter - 1;
+
+function g = grad(x,r)
+grd = [2*x(1) + x(2)
+    x(1) + 6*x(2)];
+g = zeros(size(x,1),1);
+g(r) = grd(r);
